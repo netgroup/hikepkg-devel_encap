@@ -11,10 +11,10 @@
  *
  * TODO : may be some errors could be handled instead of dropping
  * packet, considering that this is a debug tool
- * 
+ *
  * TODO : we could improve the printing by buffering different print
  * and the making a single print
- * 
+ *
  * TODO : print TCP ports
  */
 
@@ -38,10 +38,10 @@
   #include "hike_vm.h"
   #include "parse_helpers.h"
   #include "ip6_hset.h"
-#endif  
+#endif
 
 #ifdef REPL
-  #define HIKE_DEBUG 1 
+  #define HIKE_DEBUG 1
   #include "tb_defs.h"
   #include "ip6_hset_repl.h"
   #include "mock.h"
@@ -53,22 +53,33 @@
 #define TRANSP_LAYER 4
 
 /* show_pkt_info ()
- * 
- * 
- * 
+ *
+ *
+ *
  * input:
  * - ARG1:	HIKe Program ID;
  * - ARG2:  which parts of the packet needs to be printed
  * - ARG3:  user supplied info
  *
- * 
+ *
 */
+
+
+
+#define HIKE_APP_CFG_MAP_SIZE   128
+bpf_map(sid_list_1, HASH, __u32, struct in6_addr, HIKE_APP_CFG_MAP_SIZE);
+
+bpf_map(sid_list_2, HASH, __u32, struct in6_addr, HIKE_APP_CFG_MAP_SIZE);
+
+bpf_map(sid_list_3, HASH, __u32, struct in6_addr, HIKE_APP_CFG_MAP_SIZE);
+
+
 HIKE_PROG(HIKE_PROG_NAME) {
 
   struct pkt_info *info = hike_pcpu_shmem();
   struct hdr_cursor *cur;
 
-  union { 
+  union {
     struct ethhdr *eth_h;
     struct ipv6hdr *ip6h;
     struct udphdr *udph;
@@ -81,8 +92,8 @@ HIKE_PROG(HIKE_PROG_NAME) {
 
   int select_layers = HVM_ARG2;
   int user_info = HVM_ARG3;
-    
-  
+
+
   int offset = 0;
   int ret;
 
@@ -101,7 +112,7 @@ HIKE_PROG(HIKE_PROG_NAME) {
 
 
   if (select_layers & LAYER_2) {
-    
+
     eth_h = (struct ethhdr *)cur_header_pointer(ctx, cur, cur->mhoff,
                sizeof(*eth_h));
     if (unlikely(!eth_h))
@@ -116,7 +127,7 @@ HIKE_PROG(HIKE_PROG_NAME) {
     DEBUG_HKPRG_PRINT("Layer 2 src : %llx",display);
 
   }
-  
+
   if (select_layers & NET_LAYER) {
 
     //TODO check that network layer is parsed ad is IPv6
@@ -127,7 +138,7 @@ HIKE_PROG(HIKE_PROG_NAME) {
             sizeof(*ip6h));
     if (unlikely(!ip6h)) 
       goto drop;
-    
+
     display = *((__u64 *)&ip6h->saddr) ;
     display = bpf_be64_to_cpu(display);
     display2 = *((__u64 *)&ip6h->saddr + 1);
@@ -161,10 +172,10 @@ HIKE_PROG(HIKE_PROG_NAME) {
 
     switch (ret) {
 
-    case IPPROTO_UDP: 
+    case IPPROTO_UDP:
       udph = (struct udphdr *)cur_header_pointer(ctx, cur, offset,
                                                  sizeof(*udph));
-      if (unlikely(!udph)) 
+      if (unlikely(!udph))
         goto drop;
       short_disp = *((__u16 *)&udph->source) ;
       short_disp = bpf_ntohs(short_disp) ;
