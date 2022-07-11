@@ -65,13 +65,15 @@
 */
 
 
+typedef struct in6_addr SID2[2];
+typedef struct in6_addr SID3[3];
+typedef struct in6_addr SID4[4];
 
 #define HIKE_APP_CFG_MAP_SIZE   128
 bpf_map(sid_list_1, HASH, __u32, struct in6_addr, HIKE_APP_CFG_MAP_SIZE);
-
-bpf_map(sid_list_2, HASH, __u32, struct in6_addr, HIKE_APP_CFG_MAP_SIZE);
-
-bpf_map(sid_list_3, HASH, __u32, struct in6_addr, HIKE_APP_CFG_MAP_SIZE);
+bpf_map(sid_list_2, HASH, __u32, SID2, HIKE_APP_CFG_MAP_SIZE);
+bpf_map(sid_list_3, HASH, __u32, SID3, HIKE_APP_CFG_MAP_SIZE);
+bpf_map(sid_list_4, HASH, __u32, SID4, HIKE_APP_CFG_MAP_SIZE);
 
 
 HIKE_PROG(HIKE_PROG_NAME) {
@@ -131,25 +133,25 @@ HIKE_PROG(HIKE_PROG_NAME) {
   if (select_layers & NET_LAYER) {
 
     //TODO check that network layer is parsed ad is IPv6
-    //TODO 2 if not parsed, we could parse it (but we should make sure 
+    //TODO 2 if not parsed, we could parse it (but we should make sure
     //       that the program is idempotent on ctx, cur...)
 
     ip6h = (struct ipv6hdr *)cur_header_pointer(ctx, cur, cur->nhoff,
             sizeof(*ip6h));
-    if (unlikely(!ip6h)) 
+    if (unlikely(!ip6h))
       goto drop;
 
     display = *((__u64 *)&ip6h->saddr) ;
     display = bpf_be64_to_cpu(display);
     display2 = *((__u64 *)&ip6h->saddr + 1);
     display2 = bpf_be64_to_cpu(display2);
-    DEBUG_HKPRG_PRINT("Net Layer src : %llx %llx", display, display2);  
+    DEBUG_HKPRG_PRINT("Net Layer src : %llx %llx", display, display2);
 
     display = *((__u64 *)&ip6h->daddr);
     display = bpf_be64_to_cpu(display);
     display2 = *((__u64 *)&ip6h->daddr + 1);
     display2 = bpf_be64_to_cpu(display2);
-    DEBUG_HKPRG_PRINT("Net Layer dst : %llx %llx", display, display2);  
+    DEBUG_HKPRG_PRINT("Net Layer dst : %llx %llx", display, display2);
   }
 
   if (select_layers & TRANSP_LAYER) {
@@ -202,10 +204,10 @@ drop:
   DEBUG_HKPRG_PRINT("drop packet");
 	return HIKE_XDP_ABORTED;
 
-#undef eth_h 
-#undef ip6h  
-#undef udph  
-#undef tcph  
+#undef eth_h
+#undef ip6h
+#undef udph
+#undef tcph
 }
 //EXPORT_HIKE_PROG(HIKE_PROG_NAME);
 EXPORT_HIKE_PROG_3(HIKE_PROG_NAME, __u64, select_layers, __u64, user_info);

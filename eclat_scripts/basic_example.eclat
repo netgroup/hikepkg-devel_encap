@@ -1,11 +1,11 @@
 # basic example
-# 
+#
 # (basic_example.eclat)
 #
 
 #from programs.mynet import hike_drop, hike_pass, monitor, show_pkt_info
 from programs.hike_default import hike_drop, hike_pass, monitor
-from programs.info import show_pkt_info
+from programs.devel_encap import show_pkt_info
 from loaders.hike_default import ip6_simple_classifier
 
 # send all IPv6 packets to our chain

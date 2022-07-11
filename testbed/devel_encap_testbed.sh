@@ -20,7 +20,7 @@
 #                                               |    COLLECTOR   |
 #                                               +----------------+
 
-ECLAT_SCRIPT=components/template/eclat_scripts/basic_example.eclat
+ECLAT_SCRIPT=components/devel_encap/eclat_scripts/basic_example.eclat
 
 DEBUG_COMMAND="scripts/enter-namespace-debug-no-vm.sh"
 DEBUG_EXEC=YES
